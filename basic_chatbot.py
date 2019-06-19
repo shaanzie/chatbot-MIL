@@ -39,10 +39,10 @@ def build_dataset(words, n_words, atleast=1):
 
 
 
-lines = open('movie_lines.txt', encoding='utf-8', errors='ignore').read().split('\n')
-conv_lines = open('movie_conversations.txt', encoding='utf-8', errors='ignore').read().split('\n')
+lines = open('thor.txt', encoding='utf-8', errors='ignore').read().split('++?++')
+#conv_lines = open('movie_conversations.txt', encoding='utf-8', errors='ignore').read().split('\n')
 
-
+'''
 id2line = {}
 for line in lines:
     _line = line.split(' +++$+++ ')
@@ -53,16 +53,16 @@ convs = [ ]
 for line in conv_lines[:-1]:
     _line = line.split(' +++$+++ ')[-1][1:-1].replace("'","").replace(" ","")
     convs.append(_line.split(','))
-
+'''
 
 
 questions = []
 answers = []
 
-for conv in convs:
-    for i in range(len(conv)-1):
-        questions.append(id2line[conv[i]])
-        answers.append(id2line[conv[i+1]])
+
+for i in range(len(lines)-1):
+    questions.append(lines[i])
+    answers.append(lines[i+1])
 
 
 def clean_text(text):
@@ -260,7 +260,7 @@ num_layers = 2
 embedded_size = 128
 learning_rate = 0.001
 batch_size = 16
-epoch = 2
+epoch = 30
 
 tf.reset_default_graph()
 sess = tf.InteractiveSession()
