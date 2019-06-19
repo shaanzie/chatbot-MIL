@@ -12,8 +12,8 @@ trainset = pd.read_csv('.\\data\\processedTrainset.csv')
 trainset = trainset.assign(clean=utils.replace_punctuation(trainset['ref']))
 vocab_to_int, int_to_vocab = utils.get_tokens(trainset['clean'])
 
-encoder = torch.load("C:/Users/Sonam Shenoy/Desktop/save/encode.pth")#map_location = 'cpu')
-decoder = torch.load("C:/Users/Sonam Shenoy/Desktop/save/decode.pth")#map_location = 'cpu')
+encoder = torch.load("C:/<any path>/encode.pth")#map_location = 'cpu')
+decoder = torch.load("C:/<any path>/decode.pth")#map_location = 'cpu')
 
 def test(dataset, encoder, decoder,
           max_length=50, device=None):

@@ -151,8 +151,8 @@ def train(dataset, encoder, decoder, enc_opt, dec_opt, criterion,
 
         print("steps: ", steps)
         #if steps%5000 == 0:
-        torch.save(encoder, "C:/Users/Sonam Shenoy/Desktop/save/encode.pth") #"drive\\app\\NERnlgenc.pth")
-        torch.save(decoder, "C:/Users/Sonam Shenoy/Desktop/save/decode.pth")
+        torch.save(encoder, "C:/<any path>/encode.pth") #"drive\\app\\NERnlgenc.pth")
+        torch.save(decoder, "C:/<any path>/decode.pth")
         print("Done")
 
             #torch.save(encoder, ".\\static\\NERnlgenc") #"drive\\app\\NERnlgenc.pth")
