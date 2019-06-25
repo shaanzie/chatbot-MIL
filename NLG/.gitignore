@@ -1,6 +1,0 @@
-*.pth
-*.pyc
-*test*
-*.ipynb
-./__pycache__/*
-./data/* 
