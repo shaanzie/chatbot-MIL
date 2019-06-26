@@ -7,7 +7,7 @@ from tqdm import tqdm
 from sklearn.utils import shuffle
 from data.twitter import data
 from tensorlayer.models.seq2seq import Seq2seq
-import seq2seq_attention
+from seq2seq_attention import Seq2seqLuongAttention
 import os
 import sqlite3
 import spacy
@@ -19,7 +19,7 @@ print('All libraries imported')
 
 
 def initial_setup(data_corpus):
-    metadata, idx_q, idx_a = data.load_data(PATH='data/{}/'.format(data_corpus))
+    metadata, idx_q, idx_a = data.load_data(PATH='data/{}/'.format(data_corpus)) 
     (trainX, trainY), (testX, testY), (validX, validY) = data.split_dataset(idx_q, idx_a)
     trainX = tl.prepro.remove_pad_sequences(trainX.tolist())
     trainY = tl.prepro.remove_pad_sequences(trainY.tolist())
@@ -81,14 +81,22 @@ if __name__ == "__main__":
         return sentence
 
     decoder_seq_length = 20
+    '''
+    model_=model_ = Seq2seqLuongAttention(
+            hidden_size=128, cell=tf.keras.layers.SimpleRNNCell,
+            embedding_layer=tl.layers.Embedding(vocabulary_size=vocabulary_size,
+                                                embedding_size=emb_dim), method='dot'
+)
+    '''
+
+
     model_ = Seq2seq(
         decoder_seq_length = decoder_seq_length,
-        cell_enc=tf.keras.layers.GRUCell,
-        cell_dec=tf.keras.layers.GRUCell,
-        n_layer=3,
-        n_units=256,
-        embedding_layer=tl.layers.Embedding(vocabulary_size=vocabulary_size, embedding_size=emb_dim),
-        )
+       cell_enc=tf.keras.layers.LSTMCell,
+      cell_dec=tf.keras.layers.LSTMCell,
+     n_layer=3,
+     n_units=256,
+     embedding_layer=tl.layers.Embedding(vocabulary_size=vocabulary_size, embedding_size=emb_dim))
     
 
     # Uncomment below statements if you have already saved the model
@@ -139,8 +147,8 @@ if __name__ == "__main__":
         # printing average loss after every epoch
         print('Epoch [{}/{}]: loss {:.4f}'.format(epoch + 1, num_epochs, total_loss / n_iter))
         
-    tl.files.save_npz(model_.all_weights, name='model.npz')
-        
+    tl.files.save_weights_to_hdf5('model.hdf5', model_)
+    print("model saved")   
         
     i=0
     while(i<10):
@@ -153,7 +161,7 @@ if __name__ == "__main__":
             blob=TextBlob(user_input)
             if(blob.sentiment.polarity<0):
                 count+=1
-                cursor.execute('''insert into user_inputs(questions) VALUES(?)''', user_input)
+                cursor.execute('''insert into user_inputs(questions) VALUES(?)''', (user_input,))
                 db.commit()
             else:
                 pass
@@ -165,7 +173,7 @@ if __name__ == "__main__":
                 print(">",' '.join(sentence))
     
     
-    print("model saved")       
+           
 
 #Follow up
 #create db, input respones to db
@@ -179,8 +187,8 @@ if __name__ == "__main__":
     #New start
     #follow up
     #Loading model
-    load_weights = tl.files.load_npz(name='model.npz')
-    tl.files.assign_weights(load_weights, model_)
+    load_weights = tl.files.load_hdf5_to_weights('model.hdf5', model_, skip=False)
+    #tl.files.assign_weights(load_weights, model_)
     
     #Really need to do the decision system
     time.sleep(5)
