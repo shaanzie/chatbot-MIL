@@ -5,7 +5,7 @@ import numpy as np
 from tensorlayer.cost import cross_entropy_seq, cross_entropy_seq_with_mask
 from tqdm import tqdm
 from sklearn.utils import shuffle
-from data.twitter import data
+from data.squad import data
 from tensorlayer.models.seq2seq import Seq2seq
 from seq2seq_attention import Seq2seqLuongAttention
 import os
@@ -13,13 +13,31 @@ import sqlite3
 import spacy
 from textblob import TextBlob
 import time
-
+import sys
+import pickle
 
 print('All libraries imported')
 
 
+def load_data(PATH=''):
+    # read data control dictionaries
+    try:
+        with open(PATH + 'metadata_q.pkl', 'rb') as f1:
+            metadata_q = pickle.load(f1)
+        with open(PATH + 'metadata_a.pkl', 'rb') as f2:
+            metadata_a = pickle.load(f2)
+
+    except:
+        metadata_q = None
+        metadata_a = None
+    # read numpy arrays
+    idx_q = np.load(PATH + 'idx_q.npy')
+    idx_a = np.load(PATH + 'idx_a.npy')
+    return metadata_q, metadata_a, idx_q, idx_a
+
+
 def initial_setup(data_corpus):
-    metadata, idx_q, idx_a = data.load_data(PATH='data/{}/'.format(data_corpus)) 
+    metadata_q, metadata_a, idx_q, idx_a = load_data(PATH='data/{}/'.format(data_corpus)) 
     (trainX, trainY), (testX, testY), (validX, validY) = data.split_dataset(idx_q, idx_a)
     trainX = tl.prepro.remove_pad_sequences(trainX.tolist())
     trainY = tl.prepro.remove_pad_sequences(trainY.tolist())
@@ -27,30 +45,49 @@ def initial_setup(data_corpus):
     testY = tl.prepro.remove_pad_sequences(testY.tolist())
     validX = tl.prepro.remove_pad_sequences(validX.tolist())
     validY = tl.prepro.remove_pad_sequences(validY.tolist())
-    return metadata, trainX, trainY, testX, testY, validX, validY
+    return metadata_q, metadata_a, trainX, trainY, testX, testY, validX, validY
 
 
 
 if __name__ == "__main__":
-    data_corpus = "twitter"
+    data_corpus = "squad"
 
     #data preprocessing
-    metadata, trainX, trainY, testX, testY, validX, validY = initial_setup(data_corpus)
-
+    metadata_q, metadata_a, trainX, trainY, testX, testY, validX, validY = initial_setup(data_corpus)
+    
     # Parameters
     src_len = len(trainX)
     tgt_len = len(trainY)
+
+    print(src_len,tgt_len)
+    
+    #sys.exit(0)
 
     assert src_len == tgt_len
 
     batch_size = 32
     n_step = src_len // batch_size
-    src_vocab_size = len(metadata['idx2w']) # 8002 (0~8001)
+    src_vocab_size = len(metadata_q['idx2w'])
+    
+    #tgt_vocab_size = len(metadata_a['idx2w']) # 8002 (0~8001)
+    #print(src_vocab_size,tgt_vocab_size)
+    #sys.exit(0)
+    
+    
+    
     emb_dim = 1024
 
-    word2idx = metadata['w2idx']   # dict  word 2 index
-    idx2word = metadata['idx2w']   # list index 2 word
+    word2idx = metadata_a['w2idx']   # dict  word 2 index
+    word2idx_2 = metadata_q['w2idx']
+    word2idx.update(word2idx_2)
 
+    idx2word= metadata_a['idx2w']   # list index 2 word
+    idx2word_2 = metadata_q['idx2w']
+    idx2word.append(idx2word_2)
+    #print(type(idx2word))
+    #print(word2idx)    
+    #sys.exit(0)
+   
     unk_id = word2idx['unk']   # 1
     pad_id = word2idx['_']     # 0
 
@@ -67,6 +104,8 @@ if __name__ == "__main__":
     vocabulary_size = src_vocab_size
     
     count=0 #For keeping count of entries into db
+    
+    print('data processing done')
 
     def inference(seed, top_n):
         model_.eval()
@@ -103,6 +142,10 @@ if __name__ == "__main__":
 
     # load_weights = tl.files.load_npz(name='model.npz')
     # tl.files.assign_weights(load_weights, model_)
+    load_weights = tl.files.load_hdf5_to_weights('model.hdf5', model_, skip=False)
+    tl.files.assign_weights(load_weights, model_)
+
+    print('loaded model')
 
     optimizer = tf.optimizers.Adam(learning_rate=0.001)
     model_.train()
@@ -146,9 +189,11 @@ if __name__ == "__main__":
 
         # printing average loss after every epoch
         print('Epoch [{}/{}]: loss {:.4f}'.format(epoch + 1, num_epochs, total_loss / n_iter))
+        tl.files.save_weights_to_hdf5('model.hdf5', model_)
+        print("model saved") 
         
-    tl.files.save_weights_to_hdf5('model.hdf5', model_)
-    print("model saved")   
+    #tl.files.save_weights_to_hdf5('model.hdf5', model_)
+    #print("model saved")   
         
     i=0
     while(i<10):
@@ -188,8 +233,8 @@ if __name__ == "__main__":
     #follow up
     #Loading model
     load_weights = tl.files.load_hdf5_to_weights('model.hdf5', model_, skip=False)
-    #tl.files.assign_weights(load_weights, model_)
-    
+    tl.files.assign_weights(load_weights, model_)
+      
     #Really need to do the decision system
     time.sleep(5)
 
