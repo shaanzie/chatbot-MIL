@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
     src_vocab_size = tgt_vocab_size = src_vocab_size + 2
 
-    num_epochs = 1
+    num_epochs = 50
     vocabulary_size = src_vocab_size
     
     count=0 #For keeping count of entries into db
@@ -102,7 +102,8 @@ if __name__ == "__main__":
     # Uncomment below statements if you have already saved the model
 
     # load_weights = tl.files.load_npz(name='model.npz')
-    # tl.files.assign_weights(load_weights, model_)
+    load_weights = tl.files.load_hdf5_to_weights('model.hdf5', model_, skip=False)
+    tl.files.assign_weights(load_weights, model_)
 
     optimizer = tf.optimizers.Adam(learning_rate=0.001)
     model_.train()
@@ -149,7 +150,7 @@ if __name__ == "__main__":
         
     tl.files.save_weights_to_hdf5('model.hdf5', model_)
     print("model saved")   
-        
+        	
     i=0
     while(i<10):
         user_input=input()
