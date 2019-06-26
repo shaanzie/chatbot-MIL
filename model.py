@@ -232,8 +232,8 @@ if __name__ == "__main__":
     #New start
     #follow up
     #Loading model
-    load_weights = tl.files.load_hdf5_to_weights('model.hdf5', model_, skip=False)
-    tl.files.assign_weights(load_weights, model_)
+    tl.files.load_hdf5_to_weights('model.hdf5', model_, skip=False)
+    #tl.files.assign_weights(load_weights, model_)
       
     #Really need to do the decision system
     time.sleep(5)
