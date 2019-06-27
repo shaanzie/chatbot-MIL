@@ -100,7 +100,7 @@ if __name__ == "__main__":
 
     src_vocab_size = tgt_vocab_size = src_vocab_size + 2
 
-    num_epochs = 1
+    num_epochs = 50
     vocabulary_size = src_vocab_size
     
     count=0 #For keeping count of entries into db
@@ -141,11 +141,14 @@ if __name__ == "__main__":
     # Uncomment below statements if you have already saved the model
 
     # load_weights = tl.files.load_npz(name='model.npz')
-    # tl.files.assign_weights(load_weights, model_)
-    load_weights = tl.files.load_hdf5_to_weights('model.hdf5', model_, skip=False)
-    tl.files.assign_weights(load_weights, model_)
 
-    print('loaded model')
+    if os.path.exists('model.hdf5'):
+      # tl.files.assign_weights(load_w eights, model_)
+      load_weights = tl.files.load_hdf5_to_weights('model.hdf5', model_, skip=False)
+      tl.files.assign_weights(load_weights, model_)
+
+      print('loaded model')
+
 
     optimizer = tf.optimizers.Adam(learning_rate=0.001)
     model_.train()
@@ -191,9 +194,6 @@ if __name__ == "__main__":
         print('Epoch [{}/{}]: loss {:.4f}'.format(epoch + 1, num_epochs, total_loss / n_iter))
         tl.files.save_weights_to_hdf5('model.hdf5', model_)
         print("model saved") 
-        
-    #tl.files.save_weights_to_hdf5('model.hdf5', model_)
-    #print("model saved")   
         
     i=0
     while(i<10):
